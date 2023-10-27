@@ -1,8 +1,8 @@
-import Header from './component/Header.js';
-import Product from './component/Product.js';
+import Header from '../components/Header.js';
+import Product from './../components/List/Product.js';
 
-export default function ProductListPage({ $app, initialstate, onClick }) {
-    this.state = initialstate;
+export default function ProductListPage({ $app, initialState, onClick }) {
+    this.state = initialState;
     this.$target = document.createElement('div');
     this.$target.className = 'ProductListPage';
 
@@ -10,25 +10,22 @@ export default function ProductListPage({ $app, initialstate, onClick }) {
 
     $app.appendChild(this.$target);
 
-    this.setState = (nextState) => {
-        this.state = nextState;
-        this.render();
-    };
     this.render = () => {
         this.$ul = document.createElement('ul');
-        this.$target.appendChild(this.$ul);
-
         this.state.forEach((node) => {
-            new Product({
+            this.$product = new Product({
                 $app: this.$ul,
                 initialState: node,
             });
         });
+        this.$target.appendChild(this.$ul);
     };
+    this.render();
 
-    this.$target.addEventListener('click', async (e) => {
+    this.$target.addEventListener('click', (e) => {
         const product = e.target.closest('.Product');
         if (!product) return;
-        await onClick(parseInt(product.id));
+
+        onClick(parseInt(product.id));
     });
 }

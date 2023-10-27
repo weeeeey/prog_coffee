@@ -1,3 +1,3 @@
-export function getPriceComma(price) {
+export function getPrice(price) {
     return price.toLocaleString('ko-kr');
 }

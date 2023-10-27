@@ -1,38 +1,21 @@
-import { getProduct } from './api.js';
-import { getCart, setCart } from './localStorage.js';
-import CartPage from './CartPage.js';
-import ProductDetailPage from './ProductDetailPage.js';
-import ProductListPage from './ProductListPage.js';
+import { getProduct } from './utility/api.js';
+import { getCart, setCart } from './utility/localStorage.js';
+
+import ProductListPage from './page/ProductListPage.js';
+import ProductDetail from './page/ProductDetail.js';
+import CartPage from './page/CartPage.js';
 
 export default function App($app) {
     this.state = {
         url: '/web',
         products: [],
-        detailProduct: {},
-        selectedProduct: [],
+        seeingProduct: {},
         cart: [],
+        willCart: [],
     };
-    const productList = new ProductListPage({
-        $app,
-        initialstate: this.state.products,
-        onClick: async (id) => {
-            try {
-                await getProduct(`/${id}`).then((res) => {
-                    this.setState({
-                        ...this.state,
-                        url: `/web/products/${id}`,
-                        detailProduct: res,
-                    });
-                });
-            } catch (error) {
-                throw new Error(error);
-            }
-        },
-    });
 
     this.setState = (nextState) => {
         this.state = nextState;
-        productList.setState(this.state.products);
         this.render();
     };
 
@@ -53,33 +36,72 @@ export default function App($app) {
     this.render = () => {
         window.history.pushState('', '', this.state.url);
         const urlArray = this.state.url.split('/');
+        $app.innerHTML = ``;
 
         if (urlArray.includes('products')) {
-            $app.innerHTML = ``;
-            new ProductDetailPage({
+            new ProductDetail({
                 $app,
-                initialState: this.state.detailProduct,
-                onClick: (data) => {
+                initialState: this.state.seeingProduct,
+                goCartPage: (productId) => {
+                    const $optionInputs =
+                        document.querySelectorAll('.optionInput');
+                    $optionInputs.forEach((node) => {
+                        const optionId = parseInt(node.id);
+                        const quantity = parseInt(node.value);
+                        setCart({
+                            productId,
+                            optionId,
+                            quantity,
+                        });
+                    });
+                    const cartData = getCart();
+                    if (!cartData && this.state.willCart.length === 0) {
+                        window.alert('장바구니가 비어있습니다.');
+                        return;
+                    }
                     this.setState({
                         ...this.state,
-                        selectedProduct: [...this.state.selectedProduct, data],
+                        url: '/web/cart',
+                        cart: cartData,
+                        willCart: [],
                     });
                 },
-                addCart: (data) => {
-                    setCart(data);
+            });
+        } else if (urlArray.includes('cart')) {
+            new CartPage({
+                $app,
+                initialState: {
+                    products: this.state.products,
+                    cart: this.state.cart,
+                },
+                reset: () => {
+                    this.setState({
+                        url: '/web',
+                        products: [],
+                        seeingProduct: {},
+                        cart: [],
+                    });
+                    window.localStorage.removeItem('products_cart');
                 },
             });
-        }
-        if (urlArray.includes('cart')) {
-            if (this.state.cart.length === 0) {
-                window.alert('장바구니가 비어있습니다.');
-            } else {
-                $app.innerHTML = ``;
-                new CartPage({
-                    $app,
-                    initialState: this.state.cart,
-                });
-            }
+        } else {
+            new ProductListPage({
+                $app,
+                initialState: this.state.products,
+                onClick: async (id) => {
+                    try {
+                        await getProduct(`/${id}`).then((res) => {
+                            this.setState({
+                                ...this.state,
+                                url: `/web/products/${id}`,
+                                seeingProduct: res,
+                            });
+                        });
+                    } catch (error) {
+                        throw new Error(error);
+                    }
+                },
+            });
         }
     };
 }
