@@ -1,31 +1,13 @@
-import Header from '../components/Header.js';
-import Product from './../components/List/Product.js';
+export default function ProductDetailPage({ $target, productId }) {
+    this.state = {
+        productId,
+    };
+    const $page = document.createElement('div');
+    $page.className = 'ProductDetailPage';
 
-export default function ProductListPage({ $app, initialState, onClick }) {
-    this.state = initialState;
-    this.$target = document.createElement('div');
-    this.$target.className = 'ProductListPage';
-
-    new Header(this.$target, '상품목록');
-
-    $app.appendChild(this.$target);
+    $page.innerHTML = '<h1>상품 정보</h1>';
 
     this.render = () => {
-        this.$ul = document.createElement('ul');
-        this.state.forEach((node) => {
-            this.$product = new Product({
-                $app: this.$ul,
-                initialState: node,
-            });
-        });
-        this.$target.appendChild(this.$ul);
+        $target.appendChild($page);
     };
-    this.render();
-
-    this.$target.addEventListener('click', (e) => {
-        const product = e.target.closest('.Product');
-        if (!product) return;
-
-        onClick(parseInt(product.id));
-    });
 }
